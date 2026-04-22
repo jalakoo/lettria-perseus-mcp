@@ -1,0 +1,48 @@
+[project]
+name = "lettria-perseus-mcp"
+version = "0.1.0"
+description = "MCP server exposing Lettria's Perseus Text-to-Graph engine via the perseus-client SDK."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "jalakoo", email = "jalakoo@gmail.com" }
+]
+requires-python = ">=3.11"
+keywords = ["mcp", "llm", "knowledge-graph", "text-to-graph", "perseus", "lettria"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "mcp[cli]>=1.2.0",
+    "perseus-client>=1.0.0rc16",
+    "python-dotenv>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/Lettria/lettria-perseus-mcp"
+Repository = "https://github.com/Lettria/lettria-perseus-mcp"
+Documentation = "https://github.com/Lettria/lettria-perseus-mcp#readme"
+Issues = "https://github.com/Lettria/lettria-perseus-mcp/issues"
+
+[project.scripts]
+lettria-perseus-mcp = "lettria_perseus_mcp:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[build-system]
+requires = ["uv_build>=0.10.3,<0.11.0"]
+build-backend = "uv_build"
