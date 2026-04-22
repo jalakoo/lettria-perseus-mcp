@@ -141,7 +141,7 @@ Pass the API key (and any optional DB creds) with `-e KEY=value`:
 ```bash
 claude mcp add lettria-perseus \
   -e PERSEUS_API_KEY=sk-perseus-... \
-  -- uv --directory /absolute/path/to/lettria-perseus-mcp run lettria-perseus-mcp
+  -- uvx --from git+https://github.com/jalakoo/lettria-perseus-mcp.git lettria-perseus-mcp
 ```
 
 Add more `-e` flags for Neo4j / FalkorDB if you plan to use those export
@@ -156,11 +156,10 @@ Add an entry to `claude_desktop_config.json` and set credentials via the
 {
   "mcpServers": {
     "lettria-perseus": {
-      "command": "uv",
+      "command": "uvx",
       "args": [
-        "--directory",
-        "/absolute/path/to/lettria-perseus-mcp",
-        "run",
+        "--from",
+        "git+https://github.com/jalakoo/lettria-perseus-mcp.git",
         "lettria-perseus-mcp"
       ],
       "env": {
