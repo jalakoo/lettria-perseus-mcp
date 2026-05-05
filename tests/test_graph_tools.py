@@ -20,9 +20,20 @@ from lettria_perseus_mcp.server import (
     forget_all_graphs,
     export_graph_ttl,
     export_graph_cql,
+    save_graph_to_neo4j,
+    save_graph_to_falkordb,
     _register,
     _GRAPHS,
 )
+
+
+_NEO4J_VARS = ("NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD")
+_FALKORDB_VARS = ("FALKORDB_HOST", "FALKORDB_PORT")
+
+
+def _clear_db_env(monkeypatch):
+    for v in _NEO4J_VARS + _FALKORDB_VARS:
+        monkeypatch.delenv(v, raising=False)
 
 
 # ---------------------------------------------------------------------------
@@ -212,3 +223,100 @@ class TestExports:
         result = export_graph_cql(graph_id=gid, output_path=out)
         assert result["graph_id"] == gid
         assert Path(out).exists()
+
+
+# ---------------------------------------------------------------------------
+# Database saves (Neo4j / FalkorDB)
+# ---------------------------------------------------------------------------
+
+
+class TestSaveToNeo4j:
+    def setup_method(self):
+        _GRAPHS.clear()
+
+    def teardown_method(self):
+        _GRAPHS.clear()
+
+    async def test_basic(self, monkeypatch):
+        for v in _NEO4J_VARS:
+            monkeypatch.setenv(v, "x")
+        graph = FakeKnowledgeGraph()
+        gid = _register(graph)
+        result = await save_graph_to_neo4j(graph_id=gid)
+        assert result == {"graph_id": gid, "target": "neo4j", "ok": True}
+        assert graph.neo4j_calls == [{"strip_prefixes": True}]
+
+    async def test_strip_prefixes_forwarded(self, monkeypatch):
+        for v in _NEO4J_VARS:
+            monkeypatch.setenv(v, "x")
+        graph = FakeKnowledgeGraph()
+        gid = _register(graph)
+        await save_graph_to_neo4j(graph_id=gid, strip_prefixes=False)
+        assert graph.neo4j_calls == [{"strip_prefixes": False}]
+
+    async def test_missing_env_raises(self, monkeypatch):
+        _clear_db_env(monkeypatch)
+        gid = _register(FakeKnowledgeGraph())
+        with pytest.raises(ValueError, match="missing environment variable"):
+            await save_graph_to_neo4j(graph_id=gid)
+
+    async def test_empty_value_is_accepted(self, monkeypatch):
+        # Presence is the gate, not non-empty value — mirrors the FalkorDB
+        # no-auth pattern (FALKORDB_PASSWORD=) that real users rely on.
+        for v in _NEO4J_VARS:
+            monkeypatch.setenv(v, "")
+        graph = FakeKnowledgeGraph()
+        gid = _register(graph)
+        await save_graph_to_neo4j(graph_id=gid)
+        assert graph.neo4j_calls == [{"strip_prefixes": True}]
+
+    async def test_unknown_graph_raises(self, monkeypatch):
+        for v in _NEO4J_VARS:
+            monkeypatch.setenv(v, "x")
+        with pytest.raises(ValueError, match="Unknown graph_id"):
+            await save_graph_to_neo4j(graph_id="missing")
+
+
+class TestSaveToFalkorDB:
+    def setup_method(self):
+        _GRAPHS.clear()
+
+    def teardown_method(self):
+        _GRAPHS.clear()
+
+    async def test_basic(self, monkeypatch):
+        for v in _FALKORDB_VARS:
+            monkeypatch.setenv(v, "x")
+        graph = FakeKnowledgeGraph()
+        gid = _register(graph)
+        result = await save_graph_to_falkordb(graph_id=gid)
+        assert result == {"graph_id": gid, "target": "falkordb", "ok": True}
+        assert graph.falkordb_calls == [{"strip_prefixes": True}]
+
+    async def test_strip_prefixes_forwarded(self, monkeypatch):
+        for v in _FALKORDB_VARS:
+            monkeypatch.setenv(v, "x")
+        graph = FakeKnowledgeGraph()
+        gid = _register(graph)
+        await save_graph_to_falkordb(graph_id=gid, strip_prefixes=False)
+        assert graph.falkordb_calls == [{"strip_prefixes": False}]
+
+    async def test_missing_env_raises(self, monkeypatch):
+        _clear_db_env(monkeypatch)
+        gid = _register(FakeKnowledgeGraph())
+        with pytest.raises(ValueError, match="missing environment variable"):
+            await save_graph_to_falkordb(graph_id=gid)
+
+    async def test_partial_env_raises(self, monkeypatch):
+        _clear_db_env(monkeypatch)
+        monkeypatch.setenv("FALKORDB_HOST", "localhost")
+        # PORT still missing
+        gid = _register(FakeKnowledgeGraph())
+        with pytest.raises(ValueError, match="FALKORDB_PORT"):
+            await save_graph_to_falkordb(graph_id=gid)
+
+    async def test_error_message_mentions_with_flag(self, monkeypatch):
+        _clear_db_env(monkeypatch)
+        gid = _register(FakeKnowledgeGraph())
+        with pytest.raises(ValueError, match="--with"):
+            await save_graph_to_falkordb(graph_id=gid)

@@ -141,11 +141,19 @@ Pass the API key (and any optional DB creds) with `-e KEY=value`:
 ```bash
 claude mcp add lettria-perseus \
   -e PERSEUS_API_KEY=sk-perseus-... \
-  -- uvx --from git+https://github.com/jalakoo/lettria-perseus-mcp.git lettria-perseus-mcp
+  -- uvx --from git+https://github.com/jalakoo/lettria-perseus-mcp.git \
+       --with 'perseus-client[all]' \
+       lettria-perseus-mcp
 ```
 
 Add more `-e` flags for Neo4j / FalkorDB if you plan to use those export
 tools.
+
+> **Why `--with 'perseus-client[all]'`?** The `neo4j` and `falkordb` Python
+> drivers are declared as optional extras on `perseus-client`. Without
+> `[all]` (or the narrower `[neo4j]` / `[falkordb]`), `save_graph_to_neo4j`
+> and `save_graph_to_falkordb` fail at import time. Drop the `--with` flag
+> if you only need TTL / Cypher exports.
 
 ### Registering with Claude Desktop
 
@@ -160,17 +168,23 @@ Add an entry to `claude_desktop_config.json` and set credentials via the
       "args": [
         "--from",
         "git+https://github.com/jalakoo/lettria-perseus-mcp.git",
+        "--with",
+        "perseus-client[all]",
         "lettria-perseus-mcp"
       ],
       "env": {
         "PERSEUS_API_KEY": "sk-perseus-...",
 
-        // Optional: only if you use `save_graph_to_neo4j`.
+        // Optional: only if you use `save_graph_to_neo4j`. These vars alone
+        // are not enough — the `--with 'perseus-client[all]'` flag above is
+        // what installs the `neo4j` driver into the uvx environment.
         "NEO4J_URI": "bolt://localhost:7687",
         "NEO4J_USER": "neo4j",
         "NEO4J_PASSWORD": "password",
 
-        // Optional: only if you use `save_graph_to_falkordb`.
+        // Optional: only if you use `save_graph_to_falkordb`. Same caveat —
+        // requires the `--with` flag above so the `falkordb` driver is
+        // installed alongside `perseus-client`.
         "FALKORDB_HOST": "localhost",
         "FALKORDB_PORT": "6379",
         "FALKORDB_USERNAME": "",
@@ -401,6 +415,7 @@ tests/
 | **Helpers** | Path traversal in `_safe_basename`, env-var validation, multibyte UTF-8 size checks |
 | **Graph registry** | Register/require round-trip, unknown-ID errors, pagination, forget/forget-all |
 | **Exports** | TTL and CQL file writing |
+| **DB saves** | Neo4j / FalkorDB env-var preconditions, `strip_prefixes` forwarding, missing-driver hint in error |
 | **CRUD tools** | list/get/delete for ontologies, files |
 
 ---

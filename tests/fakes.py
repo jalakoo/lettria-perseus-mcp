@@ -59,6 +59,14 @@ class FakeKnowledgeGraph:
         with open(path, "w") as f:
             f.write("// fake cql\n")
 
+    async def save_to_neo4j_async(self, *, strip_prefixes: bool = True) -> None:
+        self.neo4j_calls = getattr(self, "neo4j_calls", [])
+        self.neo4j_calls.append({"strip_prefixes": strip_prefixes})
+
+    async def save_to_falkordb_async(self, *, strip_prefixes: bool = True) -> None:
+        self.falkordb_calls = getattr(self, "falkordb_calls", [])
+        self.falkordb_calls.append({"strip_prefixes": strip_prefixes})
+
 
 @dataclass
 class FakeJob:

@@ -87,6 +87,30 @@ def _safe_basename(name: str, fallback: str) -> str:
     return base or fallback
 
 
+def _require_db_env(
+    required: list[str], target: str, extras: str
+) -> None:
+    """Fail fast with a clear message if DB env vars are unset.
+
+    Presence — not non-empty value — is the gate. Empty strings are valid
+    (e.g. `FALKORDB_PASSWORD=` for a no-auth local setup); a missing key is
+    almost always a config oversight.
+
+    Also reminds the operator that env vars alone aren't enough — the
+    matching driver extra (`perseus-client[neo4j]` / `[falkordb]` / `[all]`)
+    must be installed for the SDK call to import.
+    """
+    missing = [v for v in required if v not in os.environ]
+    if missing:
+        raise ValueError(
+            f"Cannot save to {target}: missing environment variable(s) "
+            f"{missing}. Set them in the MCP server's env block (or .env). "
+            f"Also ensure the driver is installed — when launching via uvx, "
+            f"add `--with '{extras}'` so the optional dependency is in the "
+            f"runtime environment."
+        )
+
+
 def _register(graph: KnowledgeGraph) -> str:
     graph_id = uuid.uuid4().hex[:12]
     _GRAPHS[graph_id] = graph
@@ -332,6 +356,11 @@ async def save_graph_to_neo4j(
     graph_id: str, strip_prefixes: bool = True
 ) -> dict[str, Any]:
     """Write a graph to Neo4j using NEO4J_URI/NEO4J_USER/NEO4J_PASSWORD env vars."""
+    _require_db_env(
+        ["NEO4J_URI", "NEO4J_USER", "NEO4J_PASSWORD"],
+        target="Neo4j",
+        extras="perseus-client[neo4j]",
+    )
     graph = _require(graph_id)
     await graph.save_to_neo4j_async(strip_prefixes=strip_prefixes)
     return {"graph_id": graph_id, "target": "neo4j", "ok": True}
@@ -342,6 +371,11 @@ async def save_graph_to_falkordb(
     graph_id: str, strip_prefixes: bool = True
 ) -> dict[str, Any]:
     """Write a graph to FalkorDB using FALKORDB_* env vars."""
+    _require_db_env(
+        ["FALKORDB_HOST", "FALKORDB_PORT"],
+        target="FalkorDB",
+        extras="perseus-client[falkordb]",
+    )
     graph = _require(graph_id)
     await graph.save_to_falkordb_async(strip_prefixes=strip_prefixes)
     return {"graph_id": graph_id, "target": "falkordb", "ok": True}
