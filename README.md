@@ -1,4 +1,4 @@
-# lettria-perseus-mcp
+# perseus-mcp
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
@@ -71,8 +71,8 @@ TTL / Cypher — becomes a callable tool for an LLM agent.
 ## Installation
 
 ```bash
-git clone https://github.com/Lettria/lettria-perseus-mcp.git
-cd lettria-perseus-mcp
+git clone https://github.com/Lettria/perseus-mcp.git
+cd perseus-mcp
 uv sync   # optional — uv run will do this on first launch
 ```
 
@@ -146,7 +146,7 @@ Pass the API key (and any optional DB creds) with `-e KEY=value`:
 ```bash
 claude mcp add lettria-perseus \
   -e PERSEUS_API_KEY=sk-perseus-... \
-  -- uvx --from git+https://github.com/Lettria/lettria-perseus-mcp.git \
+  -- uvx --from git+https://github.com/Lettria/perseus-mcp.git \
        --with 'perseus-client[all]' \
        lettria-perseus-mcp
 ```
@@ -172,7 +172,7 @@ Add an entry to `claude_desktop_config.json` and set credentials via the
       "command": "uvx",
       "args": [
         "--from",
-        "git+https://github.com/Lettria/lettria-perseus-mcp.git",
+        "git+https://github.com/Lettria/perseus-mcp.git",
         "--with",
         "perseus-client[all]",
         "lettria-perseus-mcp"
@@ -387,7 +387,7 @@ auditable:
   vulnerable dependencies (`.github/workflows/license-scan.yml`).
 
 Found a vulnerability? Please report it privately via the repository's
-[security advisories](https://github.com/Lettria/lettria-perseus-mcp/security/advisories/new)
+[security advisories](https://github.com/Lettria/perseus-mcp/security/advisories/new)
 rather than opening a public issue.
 
 ---

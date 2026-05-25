@@ -26,10 +26,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Lettria/lettria-perseus-mcp"
-Repository = "https://github.com/Lettria/lettria-perseus-mcp"
-Documentation = "https://github.com/Lettria/lettria-perseus-mcp#readme"
-Issues = "https://github.com/Lettria/lettria-perseus-mcp/issues"
+Homepage = "https://github.com/Lettria/perseus-mcp"
+Repository = "https://github.com/Lettria/perseus-mcp"
+Documentation = "https://github.com/Lettria/perseus-mcp#readme"
+Issues = "https://github.com/Lettria/perseus-mcp/issues"
 
 [project.scripts]
 lettria-perseus-mcp = "lettria_perseus_mcp:main"
