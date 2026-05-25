@@ -1,0 +1,41 @@
+name: CodeQL
+
+# Static application security testing (SAST) for the Python source.
+# Runs on pushes/PRs to main and weekly so newly-disclosed query patterns
+# are applied even when the code is idle.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "27 4 * * 1" # Mondays, 04:27 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (python)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write # upload results to the Security tab
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          # Layer the maintainability/quality queries on top of the
+          # security-focused default pack.
+          queries: security-and-quality
+
+      # Python is interpreted, so CodeQL needs no build step.
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:python"

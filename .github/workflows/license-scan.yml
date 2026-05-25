@@ -1,0 +1,75 @@
+name: License scan
+
+# Two complementary checks on third-party license obligations:
+#   * inventory          - a full report of every installed dependency's
+#                          license, published to the job summary + artifact.
+#   * dependency-review   - GitHub's SPDX-aware gate that blocks PRs which
+#                          introduce denied (copyleft) licenses or known vulns.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "27 4 * * 1" # Mondays, 04:27 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    name: Dependency license inventory
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Sync locked dependencies
+        run: uv sync --frozen
+
+      - name: Generate license report
+        run: |
+          uv run --with pip-licenses pip-licenses \
+            --with-authors --with-urls --order=license \
+            --format=markdown --output-file=licenses.md
+          {
+            echo "## Dependency licenses"
+            echo
+            cat licenses.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Flag strong-copyleft licenses
+        # Best-effort advisory using the strings pip-licenses emits. Scoped to
+        # *strong* copyleft (GPL/AGPL) — weak/file-level licenses such as
+        # MPL-2.0 (e.g. certifi) and LGPL are fine to depend on from an
+        # MIT-licensed tool. The authoritative gate is the dependency-review
+        # job below; this catches strong copyleft already in the locked tree.
+        run: |
+          uv run --with pip-licenses pip-licenses --format=json \
+            --fail-on="GNU General Public License (GPL);GNU General Public License v2 (GPLv2);GNU General Public License v2 or later (GPLv2+);GNU General Public License v3 (GPLv3);GNU General Public License v3 or later (GPLv3+);GNU Affero General Public License v3 (AGPLv3);GNU Affero General Public License v3 or later (AGPLv3+)"
+
+      - name: Upload license report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: licenses.md
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@v5
+        with:
+          deny-licenses: GPL-2.0, GPL-3.0, AGPL-3.0
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
