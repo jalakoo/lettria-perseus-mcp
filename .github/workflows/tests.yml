@@ -1,0 +1,38 @@
+name: Tests
+
+# Runs the pytest suite so every push/PR — including Dependabot dependency
+# bumps — is verified against the supported Python versions before merge.
+# The suite mocks the perseus_client SDK, so no API key or network is needed.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: pytest (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    env:
+      # uv resolves/downloads this interpreter for both sync and run.
+      UV_PYTHON: ${{ matrix.python-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Sync locked dependencies (dev group included)
+        run: uv sync --frozen
+
+      - name: Run tests
+        run: uv run pytest tests/ -v
