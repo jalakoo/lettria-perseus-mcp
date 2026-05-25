@@ -1,5 +1,9 @@
 # lettria-perseus-mcp
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+[![Model Context Protocol](https://img.shields.io/badge/MCP-server-6E56CF.svg)](https://modelcontextprotocol.io/)
+
 An [MCP](https://modelcontextprotocol.io/) server that exposes [Lettria
 Perseus](https://docs.perseus.lettria.net/), Lettria's Text-to-Graph engine,
 to MCP-compatible clients (Claude Code, Claude Desktop, Cursor, Zed, etc.).
@@ -26,6 +30,7 @@ TTL / Cypher — becomes a callable tool for an LLM agent.
 - [Typical workflows](#typical-workflows)
 - [Inline text vs. file paths](#inline-text-vs-file-paths)
 - [Design notes](#design-notes)
+- [Security](#security)
 - [Development](#development)
   - [Testing](#testing)
 - [License](#license)
@@ -66,7 +71,7 @@ TTL / Cypher — becomes a callable tool for an LLM agent.
 ## Installation
 
 ```bash
-git clone <this-repo-url> lettria-perseus-mcp
+git clone https://github.com/Lettria/lettria-perseus-mcp.git
 cd lettria-perseus-mcp
 uv sync   # optional — uv run will do this on first launch
 ```
@@ -141,7 +146,7 @@ Pass the API key (and any optional DB creds) with `-e KEY=value`:
 ```bash
 claude mcp add lettria-perseus \
   -e PERSEUS_API_KEY=sk-perseus-... \
-  -- uvx --from git+https://github.com/jalakoo/lettria-perseus-mcp.git \
+  -- uvx --from git+https://github.com/Lettria/lettria-perseus-mcp.git \
        --with 'perseus-client[all]' \
        lettria-perseus-mcp
 ```
@@ -167,7 +172,7 @@ Add an entry to `claude_desktop_config.json` and set credentials via the
       "command": "uvx",
       "args": [
         "--from",
-        "git+https://github.com/jalakoo/lettria-perseus-mcp.git",
+        "git+https://github.com/Lettria/lettria-perseus-mcp.git",
         "--with",
         "perseus-client[all]",
         "lettria-perseus-mcp"
@@ -359,6 +364,31 @@ the right answer.
   passed through tool arguments; the SDK reads them via pydantic-settings.
 - **Failures surface as tool errors.** `PerseusException`s and validation
   errors propagate up to the MCP client rather than being swallowed.
+
+---
+
+## Security
+
+Automated checks run on the repository so the published package stays
+auditable:
+
+- **Dependabot** — security-vulnerability alerts and automated fix PRs, plus
+  weekly version-update PRs for the `uv`-resolved Python dependencies and the
+  GitHub Actions used in CI (`.github/dependabot.yml`).
+- **Secret scanning** — GitHub secret scanning with push protection, so
+  credentials can't be committed. No secrets live in the repo: API keys and
+  database passwords are read from the environment at runtime only (see
+  [Configuration](#configuration)).
+- **SAST** — [CodeQL](https://codeql.github.com/) static analysis on every
+  push/PR to `main` and weekly, using the `security-and-quality` query suite
+  (`.github/workflows/codeql.yml`).
+- **License scan** — a dependency-license inventory plus GitHub
+  dependency-review, which blocks PRs that introduce strong-copyleft or
+  vulnerable dependencies (`.github/workflows/license-scan.yml`).
+
+Found a vulnerability? Please report it privately via the repository's
+[security advisories](https://github.com/Lettria/lettria-perseus-mcp/security/advisories/new)
+rather than opening a public issue.
 
 ---
 
