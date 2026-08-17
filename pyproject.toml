@@ -20,8 +20,8 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 dependencies = [
-    "mcp[cli]>=1.27.1",
-    "perseus-client>=1.0.0rc16",
+    "mcp[cli]>=2.0.0",
+    "perseus-client>=1.0.0rc19",
     "python-dotenv>=1.0.0",
 ]
 
@@ -36,13 +36,13 @@ lettria-perseus-mcp = "lettria_perseus_mcp:main"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.0",
-    "pytest-asyncio>=0.24",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
 ]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 
 [build-system]
-requires = ["uv_build>=0.11.16,<0.12.0"]
+requires = ["uv_build>=0.12.5,<0.13.0"]
 build-backend = "uv_build"
